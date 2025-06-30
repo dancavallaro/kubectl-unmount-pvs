@@ -1,10 +1,10 @@
-project_name: {{ .PluginName }}
+project_name: kubectl-unmount-pvs
 release:
   github:
-    owner: {{ .Owner }}
-    name: {{ .Repo }}
+    owner: dancavallaro
+    name: kubectl-unmount-pvs
 builds:
-  - id: {{ .PluginName }}
+  - id: kubectl-unmount-pvs
     goos:
     - linux
     - windows
@@ -17,12 +17,12 @@ builds:
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/{{ .Owner }}/{{ .Repo }}/pkg/version.version=
+      -X github.com/dancavallaro/kubectl-unmount-pvs/pkg/version.version=
 archives:
-  - id: {{ .PluginName }}
+  - id: kubectl-unmount-pvs
     builds:
-    - {{ .PluginName }}
-    name_template: {{ `"{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"` }}
+    - kubectl-unmount-pvs
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
     - goos: windows
       format: zip
