@@ -3,78 +3,53 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"os"
-	"strings"
-	"time"
-
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/logger"
 	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tj/go-spin"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"os"
+	"strings"
 )
 
 var (
-	KubernetesConfigFlags *genericclioptions.ConfigFlags
+	config *plugin.ConfigFlags
 )
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "kubectl-unmount-pvs",
-		Short:         "",
-		Long:          `.`,
+		Use:           "kubectl unmount-pvs",
+		Short:         "TODO", // TODO
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PreRun: func(cmd *cobra.Command, args []string) {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log := logger.NewLogger()
-			log.Info("")
-
-			s := spin.New()
-			finishedCh := make(chan bool, 1)
-			namespaceName := make(chan string, 1)
-			go func() {
-				lastNamespaceName := ""
-				for {
-					select {
-					case <-finishedCh:
-						fmt.Printf("\r")
-						return
-					case n := <-namespaceName:
-						lastNamespaceName = n
-					case <-time.After(time.Millisecond * 100):
-						if lastNamespaceName == "" {
-							fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s", s.Next())
-						} else {
-							fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s (%s)", s.Next(), lastNamespaceName)
-						}
-					}
-				}
-			}()
-			defer func() {
-				finishedCh <- true
-			}()
-
-			if err := plugin.RunPlugin(KubernetesConfigFlags, namespaceName); err != nil {
+			if *config.Namespace == "" && *config.StorageClass == "" {
+				return fmt.Errorf("you must specify at least one of --namespace or --storage-class")
+			}
+			if err := plugin.RunPlugin(config); err != nil {
 				return errors.Unwrap(err)
 			}
-
-			log.Info("")
-
 			return nil
 		},
 	}
 
 	cobra.OnInitialize(initConfig)
-
-	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
-	KubernetesConfigFlags.AddFlags(cmd.Flags())
+	config = &plugin.ConfigFlags{
+		ConfigFlags:  *genericclioptions.NewConfigFlags(false),
+		StorageClass: stringptr(""),
+	}
+	// TODO: add dry-run option
+	cmd.Flags().StringVarP(config.StorageClass, "storage-class", "c", "", "Unmount PVs of a specific storage class")
+	config.AddFlags(cmd.Flags())
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	return cmd
+}
+
+func stringptr(val string) *string {
+	return &val
 }
 
 func InitAndExecute() {

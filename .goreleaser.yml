@@ -1,3 +1,4 @@
+version: 2
 project_name: kubectl-unmount-pvs
 release:
   github:
@@ -7,11 +8,11 @@ builds:
   - id: kubectl-unmount-pvs
     goos:
     - linux
-    - windows
     - darwin
+    #- windows # isn't building on arm64
     goarch:
     - amd64
-    - "386"
+    - arm64
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
@@ -20,9 +21,6 @@ builds:
       -X github.com/dancavallaro/kubectl-unmount-pvs/pkg/version.version=
 archives:
   - id: kubectl-unmount-pvs
-    builds:
+    ids:
     - kubectl-unmount-pvs
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    format_overrides:
-    - goos: windows
-      format: zip

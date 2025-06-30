@@ -14,12 +14,20 @@ func NewLogger() *Logger {
 }
 
 func (l *Logger) Info(msg string, args ...interface{}) {
+	log(color.FgHiCyan, msg, args...)
+}
+
+func (l *Logger) Warn(msg string, args ...interface{}) {
+	log(color.FgHiYellow, msg, args...)
+}
+
+func log(col color.Attribute, msg string, args ...interface{}) {
 	if msg == "" {
 		fmt.Println("")
 		return
 	}
 
-	c := color.New(color.FgHiCyan)
+	c := color.New(col)
 	c.Println(fmt.Sprintf(msg, args...))
 }
 
