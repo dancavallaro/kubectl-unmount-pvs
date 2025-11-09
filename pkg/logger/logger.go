@@ -2,42 +2,43 @@ package logger
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/fatih/color"
 )
 
 type Logger struct {
+	w io.Writer
 }
 
-func NewLogger() *Logger {
-	return &Logger{}
+func NewLogger(w io.Writer) *Logger {
+	return &Logger{
+		w: w,
+	}
 }
 
-func (l *Logger) Info(msg string, args ...interface{}) {
-	log(color.FgHiCyan, msg, args...)
+func (l *Logger) Info(msg string, args ...any) {
+	l.log(color.FgHiCyan, msg+"\n", args...)
 }
 
-func (l *Logger) Warn(msg string, args ...interface{}) {
-	log(color.FgHiYellow, msg, args...)
+func (l *Logger) Warn(msg string, args ...any) {
+	l.log(color.FgHiYellow, msg+"\n", args...)
 }
 
-func log(col color.Attribute, msg string, args ...interface{}) {
+func (l *Logger) Error(err error) {
+	l.log(color.FgHiRed, "%v\n", err)
+}
+
+func (l *Logger) Instructions(msg string, args ...any) {
+	l.log(color.FgHiWhite, "\n"+msg, args...)
+}
+
+func (l *Logger) log(col color.Attribute, msg string, args ...any) {
 	if msg == "" {
 		fmt.Println("")
 		return
 	}
 
 	c := color.New(col)
-	c.Println(fmt.Sprintf(msg, args...))
-}
-
-func (l *Logger) Error(err error) {
-	c := color.New(color.FgHiRed)
-	c.Println(fmt.Sprintf("%#v", err))
-}
-
-func (l *Logger) Instructions(msg string, args ...interface{}) {
-	white := color.New(color.FgHiWhite)
-	white.Println("")
-	white.Println(fmt.Sprintf(msg, args...))
+	_, _ = c.Fprint(l.w, fmt.Sprintf(msg, args...))
 }
