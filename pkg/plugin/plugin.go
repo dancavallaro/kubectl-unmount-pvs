@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -24,16 +25,19 @@ type ConfigFlags struct {
 	StorageClass *string
 
 	logger *logger.Logger
+	out    io.Writer
 }
 
-func RunPlugin(flags *ConfigFlags) error {
+func RunPlugin(pluginCfg *ConfigFlags) error {
 	ctx := context.Background()
-	log := flags.logger
-	if log == nil {
-		log = logger.NewLogger(os.Stderr)
+	if pluginCfg.logger == nil {
+		pluginCfg.logger = logger.NewLogger(os.Stderr)
+	}
+	if pluginCfg.out == nil {
+		pluginCfg.out = os.Stdout
 	}
 
-	config, err := flags.ToRESTConfig()
+	config, err := pluginCfg.ToRESTConfig()
 	if err != nil {
 		return fmt.Errorf("failed to read kubeconfig: %w", err)
 	}
@@ -43,72 +47,72 @@ func RunPlugin(flags *ConfigFlags) error {
 		return fmt.Errorf("failed to create clientset: %w", err)
 	}
 
-	return run(ctx, log, flags, clientset)
+	return run(ctx, pluginCfg, clientset)
 }
 
-func run(ctx context.Context, log *logger.Logger, flags *ConfigFlags, clientset *kubernetes.Clientset) error {
-	finder := discovery.New(clientset, log)
+func run(ctx context.Context, cfg *ConfigFlags, clientset *kubernetes.Clientset) error {
+	finder := discovery.New(clientset, cfg.logger)
 
 	filter := discovery.PVCFilter{}
-	if flags.Namespace != nil {
-		filter.Namespace = *flags.Namespace
+	if cfg.Namespace != nil {
+		filter.Namespace = *cfg.Namespace
 	}
-	if flags.StorageClass != nil {
-		filter.StorageClass = *flags.StorageClass
+	if cfg.StorageClass != nil {
+		filter.StorageClass = *cfg.StorageClass
 	}
 
-	log.Info("Finding volumes...")
+	cfg.logger.Info("Finding volumes...")
 	pvcsPerNs, err := finder.FindPVCs(ctx, filter)
 	if err != nil {
 		return err
 	}
 	if len(pvcsPerNs) == 0 {
-		log.Info("No matching PVCs found, nothing to do")
+		cfg.logger.Info("No matching PVCs found, nothing to do")
 		return nil
 	}
 
-	log.Info("Finding pods...")
+	cfg.logger.Info("Finding pods...")
 	pods, err := finder.FindPodsUsingPVCs(ctx, pvcsPerNs)
 	if err != nil {
 		return err
 	}
 	if len(pods) == 0 {
-		log.Info("No pods found, nothing to do")
+		cfg.logger.Info("No pods found, nothing to do")
 		return nil
 	}
-	log.Info("Found %d pods to scale down", len(pods))
+	cfg.logger.Info("Found %d pods to scale down", len(pods))
 
 	controllers, err := finder.FindControllers(ctx, pods)
 	if err != nil {
 		return err
 	}
 	if len(controllers) == 0 {
-		log.Info("No controllers found to scale down")
+		cfg.logger.Info("No controllers found to scale down")
 		return nil
 	}
-	log.Info("Found %d controllers to scale down", len(controllers))
+	cfg.logger.Info("Found %d controllers to scale down", len(controllers))
 
 	// Print the affected controllers on stdout (other logs are on stderr)
 	for _, controller := range controllers {
-		fmt.Printf("  %v\n", controller)
+		_, _ = fmt.Fprintf(cfg.out, "  %v\n", controller)
 	}
 
-	skipConfirmation := flags.Confirmed != nil && *flags.Confirmed
-	confirmed, err := confirmAction(log, "Scale down the controllers listed above?", skipConfirmation)
+	skipConfirmation := cfg.Confirmed != nil && *cfg.Confirmed
+	confirmed, err := confirmAction(cfg.logger, "Scale down the controllers listed above?", skipConfirmation)
 	if err != nil {
 		return err
 	}
 	if !confirmed {
-		log.Info("Operation cancelled by user")
+		cfg.logger.Info("Operation cancelled by user")
 		return nil
 	}
 
-	log.Info("Scaling down %d controller(s)...", len(controllers))
-	scaler := scaling.New(clientset, log, *flags.DryRun)
+	cfg.logger.Info("Scaling down %d controller(s)...", len(controllers))
+	scaler := scaling.New(clientset, cfg.logger, *cfg.DryRun)
 	errors := 0
 	for _, ctrl := range controllers {
 		if err := scaler.ScaleDown(ctx, ctrl); err != nil {
-			log.Error(err)
+			cfg.logger.Error(err)
 			errors++
 			// Continue with other controllers even if one fails
 		}
@@ -118,7 +122,7 @@ func run(ctx context.Context, log *logger.Logger, flags *ConfigFlags, clientset 
 		return fmt.Errorf("encountered %d errors scaling down", errors)
 	}
 
-	if !*flags.DryRun {
+	if !*cfg.DryRun {
 		<-spinner.Wait("Waiting for pods to scale down... ", func() (bool, error) {
 			pods, err := finder.FindPodsUsingPVCs(ctx, pvcsPerNs)
 			if err != nil {
@@ -126,11 +130,11 @@ func run(ctx context.Context, log *logger.Logger, flags *ConfigFlags, clientset 
 			}
 			return len(pods) == 0, nil
 		}, func(err error) {
-			log.Error(err)
+			cfg.logger.Error(err)
 		}, 2*time.Second)
 	}
 
-	log.Info("Scale down complete")
+	cfg.logger.Info("Scale down complete")
 
 	return nil
 }

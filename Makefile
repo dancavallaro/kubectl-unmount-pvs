@@ -1,12 +1,9 @@
-
-export GO111MODULE=on
-
 .PHONY: all
 all: test bin
 
 .PHONY: test
 test:
-	go test ./pkg/... ./cmd/... -coverprofile cover.out
+	go test ./pkg/... -coverprofile cover.out
 
 .PHONY: bin
 bin: fmt vet

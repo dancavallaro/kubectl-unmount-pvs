@@ -12,7 +12,7 @@ kubectl krew install unmount-pvs
 
 Unmount all PVs of a specific storage class:
 ```shell
-kubectl unmount-pvs --storage-class=fast-ssd
+kubectl unmount-pvs --storage-class=standard
 ```
 
 Unmount all PVs in a namespace:
@@ -27,5 +27,5 @@ kubectl unmount-pvs --namespace=my-namespace
 
 Skip confirmation prompt:
 ```shell
-kubectl unmount-pvs --storage-class=fast-ssd --yes
+kubectl unmount-pvs --storage-class=standard --yes
 ```

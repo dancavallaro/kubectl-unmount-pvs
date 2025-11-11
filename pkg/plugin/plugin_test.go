@@ -3,7 +3,9 @@ package plugin
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/common"
@@ -46,14 +48,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestRunPlugin(t *testing.T) {
-	var logBuf bytes.Buffer
-	pluginCfg := &ConfigFlags{
-		StorageClass: &storageClassName,
-		DryRun:       common.BoolP(false),
-		Confirmed:    common.BoolP(true),
-		logger:       logger.NewLogger(&logBuf),
-	}
-
 	f := features.New("Scale down Deployment").
 		Setup(func(ctx context.Context, t *testing.T, config *envconf.Config) context.Context {
 			client := config.Client()
@@ -151,32 +145,60 @@ func TestRunPlugin(t *testing.T) {
 				t.Error(err)
 			}
 
-			pluginCfg.Namespace = &namespace
 			return context.WithValue(ctx, "namespace", namespace)
 		}).
 		Assess("Verify expected Pods are running", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			*pluginCfg.DryRun = true
-			logBuf.Reset()
-			require.NoError(t, RunPlugin(pluginCfg))
-			require.Contains(t, logBuf.String(), "Found 1 pods to scale down")
-			require.Contains(t, logBuf.String(), "Found 1 controllers to scale down")
+			ns := ctx.Value("namespace").(string)
+			out, logs, err := runPlugin(ctx, func(cfg *ConfigFlags) {
+				*cfg.DryRun = true
+			})
+			require.NoError(t, err)
+			require.Contains(t, logs, "Found 1 pods to scale down")
+			require.Contains(t, logs, "Found 1 controllers to scale down")
+			require.Equal(t, fmt.Sprintf("Deployment/%s/test-deployment", ns), out)
 			return ctx
 		}).
 		Assess("Scale down affected controllers", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			*pluginCfg.DryRun = false
-			logBuf.Reset()
-			require.NoError(t, RunPlugin(pluginCfg))
-			require.Contains(t, logBuf.String(), "Scale down complete")
+			ns := ctx.Value("namespace").(string)
+			out, logs, err := runPlugin(ctx, func(cfg *ConfigFlags) {
+				*cfg.DryRun = false
+			})
+			require.NoError(t, err)
+			require.Contains(t, logs, "Scale down complete")
+			require.Equal(t, fmt.Sprintf("Deployment/%s/test-deployment", ns), out)
 			return ctx
 		}).
 		Assess("Verify Pods are no longer running", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			*pluginCfg.DryRun = true
-			logBuf.Reset()
-			require.NoError(t, RunPlugin(pluginCfg))
-			require.Contains(t, logBuf.String(), "No pods found, nothing to do")
+			out, logs, err := runPlugin(ctx, func(cfg *ConfigFlags) {
+				*cfg.DryRun = true
+			})
+			require.NoError(t, err)
+			require.Contains(t, logs, "No pods found, nothing to do")
+			require.Empty(t, out)
 			return ctx
 		}).
 		Feature()
 
 	testenv.Test(t, f)
+}
+
+func runPlugin(ctx context.Context, configurers ...func(*ConfigFlags)) (string, string, error) {
+	ns := ctx.Value("namespace").(string)
+	var logBuf, outBuf bytes.Buffer
+	pluginCfg := &ConfigFlags{
+		StorageClass: &storageClassName,
+		DryRun:       common.BoolP(false),
+		Confirmed:    common.BoolP(true),
+		logger:       logger.NewLogger(&logBuf),
+		out:          &outBuf,
+	}
+	pluginCfg.Namespace = &ns
+
+	for _, configurer := range configurers {
+		configurer(pluginCfg)
+	}
+
+	err := RunPlugin(pluginCfg)
+
+	return strings.TrimSpace(outBuf.String()), logBuf.String(), err
 }
