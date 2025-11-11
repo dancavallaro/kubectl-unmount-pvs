@@ -6,14 +6,14 @@ import (
 	"maps"
 	"slices"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // FindPodsUsingPVCs finds all pods that are using the given PVCs.
 // Returns a deduplicated list of pods.
-func (f *Finder) FindPodsUsingPVCs(ctx context.Context, pvcsPerNs map[string][]string) ([]v1.Pod, error) {
-	pods := make(map[string]v1.Pod) // key: namespace/name
+func (f *Finder) FindPodsUsingPVCs(ctx context.Context, pvcsPerNs map[string][]string) ([]corev1.Pod, error) {
+	pods := make(map[string]corev1.Pod) // key: namespace/name
 
 	for ns, pvcs := range pvcsPerNs {
 		podList, err := f.clientset.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
@@ -22,7 +22,7 @@ func (f *Finder) FindPodsUsingPVCs(ctx context.Context, pvcsPerNs map[string][]s
 		}
 
 		for _, pod := range podList.Items {
-			if pod.Status.Phase == v1.PodSucceeded || pod.Status.Phase == v1.PodFailed {
+			if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
 				continue
 			}
 			for _, vol := range pod.Spec.Volumes {

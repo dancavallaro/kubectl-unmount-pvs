@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/common"
 	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -46,9 +47,9 @@ func RootCmd() *cobra.Command {
 	cobra.OnInitialize(initConfig)
 	config = &plugin.ConfigFlags{
 		ConfigFlags:  *genericclioptions.NewConfigFlags(false),
-		Confirmed:    boolptr(false),
-		DryRun:       boolptr(false),
-		StorageClass: stringptr(""),
+		Confirmed:    common.BoolP(false),
+		DryRun:       common.BoolP(false),
+		StorageClass: common.StringP(""),
 	}
 
 	cmd.Flags().StringVarP(config.StorageClass, "storage-class", "c", "", "Unmount PVs of a specific storage class")
@@ -59,14 +60,6 @@ func RootCmd() *cobra.Command {
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	return cmd
-}
-
-func stringptr(val string) *string {
-	return &val
-}
-
-func boolptr(val bool) *bool {
-	return &val
 }
 
 func initConfig() {

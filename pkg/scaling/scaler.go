@@ -82,6 +82,6 @@ func deletePod(ctx context.Context, log *logger.Logger, clientset *kubernetes.Cl
 	if err != nil {
 		return fmt.Errorf("failed to delete pod %s/%s: %w", ctrl.Namespace, ctrl.Name, err)
 	}
-	log.Info("Deleted standalone Pod %s/%s", ctrl.Namespace, ctrl.Name)
+	log.Info("  Deleted standalone Pod %s/%s", ctrl.Namespace, ctrl.Name)
 	return nil
 }

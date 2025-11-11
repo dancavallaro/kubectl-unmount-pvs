@@ -6,13 +6,13 @@ import (
 	"slices"
 
 	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/common"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // FindController traces the owner references to find the top-level controller.
 // It walks up the ownership chain (e.g., Pod -> ReplicaSet -> Deployment).
-func (f *Finder) FindController(ctx context.Context, pod v1.Pod) (common.ControllerRef, error) {
+func (f *Finder) FindController(ctx context.Context, pod corev1.Pod) (common.ControllerRef, error) {
 	// Check if pod has any owner references
 	if len(pod.OwnerReferences) == 0 {
 		// Standalone pod with no controller
@@ -60,7 +60,7 @@ func (f *Finder) FindController(ctx context.Context, pod v1.Pod) (common.Control
 }
 
 // FindControllers finds the (deduplicated) top-level controllers for the provided pods.
-func (f *Finder) FindControllers(ctx context.Context, pods []v1.Pod) ([]common.ControllerRef, error) {
+func (f *Finder) FindControllers(ctx context.Context, pods []corev1.Pod) ([]common.ControllerRef, error) {
 	f.log.Info("Finding controllers for pods...")
 	controllers := make(map[string]common.ControllerRef) // key: "kind/namespace/name"
 	for _, pod := range pods {

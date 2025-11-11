@@ -22,11 +22,16 @@ type ConfigFlags struct {
 	Confirmed    *bool
 	DryRun       *bool
 	StorageClass *string
+
+	logger *logger.Logger
 }
 
 func RunPlugin(flags *ConfigFlags) error {
 	ctx := context.Background()
-	log := logger.NewLogger(os.Stderr)
+	log := flags.logger
+	if log == nil {
+		log = logger.NewLogger(os.Stderr)
+	}
 
 	config, err := flags.ToRESTConfig()
 	if err != nil {
@@ -98,13 +103,19 @@ func run(ctx context.Context, log *logger.Logger, flags *ConfigFlags, clientset 
 		return nil
 	}
 
-	scaler := scaling.New(clientset, log, *flags.DryRun)
 	log.Info("Scaling down %d controller(s)...", len(controllers))
+	scaler := scaling.New(clientset, log, *flags.DryRun)
+	errors := 0
 	for _, ctrl := range controllers {
 		if err := scaler.ScaleDown(ctx, ctrl); err != nil {
 			log.Error(err)
+			errors++
 			// Continue with other controllers even if one fails
 		}
+	}
+
+	if errors > 0 {
+		return fmt.Errorf("encountered %d errors scaling down", errors)
 	}
 
 	if !*flags.DryRun {
