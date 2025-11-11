@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/common"
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/plugin"
+	"github.com/dancavallaro/kubectl-unmount/pkg/common"
+	"github.com/dancavallaro/kubectl-unmount/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -31,8 +31,7 @@ func main() {
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "kubectl unmount-pvs",
-
+		Use:           "kubectl unmount",
 		Short:         "Unmount all PersistentVolumes of a particular StorageClass",
 		SilenceErrors: true,
 		SilenceUsage:  true,
@@ -48,13 +47,13 @@ func RootCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Version: fmt.Sprintf("kubectl-unmount-pvs v%s, commit %s, built at %s", version, commit, date),
+		Version: fmt.Sprintf("kubectl-unmount v%s, commit %s, built at %s", version, commit, date),
 	}
 	cmd.SetVersionTemplate(`{{printf "%s\n" .Version}}`)
 
 	versionCmd := &cobra.Command{
 		Use:   "version",
-		Short: "Print the current version of kubectl-unmount-pvs",
+		Short: "Print the current version of kubectl-unmount",
 		Run: func(cmd *cobra.Command, args []string) {
 			root := cmd.Root()
 			root.SetArgs([]string{"--version"})

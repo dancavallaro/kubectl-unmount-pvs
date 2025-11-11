@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/discovery"
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/logger"
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/scaling"
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/spinner"
+	"github.com/dancavallaro/kubectl-unmount/pkg/discovery"
+	"github.com/dancavallaro/kubectl-unmount/pkg/logger"
+	"github.com/dancavallaro/kubectl-unmount/pkg/scaling"
+	"github.com/dancavallaro/kubectl-unmount/pkg/spinner"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 )

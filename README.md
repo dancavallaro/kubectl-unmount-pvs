@@ -1,31 +1,31 @@
-# kubectl-unmount-pvs
+# kubectl-unmount
 
 A `kubectl` plugin to unmount PersistentVolumes by scaling down workloads that use them.
 
 ## Installation
 
 ```shell
-kubectl krew install unmount-pvs
+kubectl krew install unmount
 ```
 
 ## Usage
 
 Unmount all PVs of a specific storage class:
 ```shell
-kubectl unmount-pvs --storage-class=standard
+kubectl unmount --storage-class=standard
 ```
 
 Unmount all PVs in a namespace:
 ```shell
-kubectl unmount-pvs --namespace=my-namespace
+kubectl unmount --namespace=my-namespace
 ```
 
 Combine filters:
 ```shell
-kubectl unmount-pvs --namespace=my-namespace
+kubectl unmount --namespace=my-namespace
 ```
 
 Skip confirmation prompt:
 ```shell
-kubectl unmount-pvs --storage-class=standard --yes
+kubectl unmount --storage-class=standard --yes
 ```

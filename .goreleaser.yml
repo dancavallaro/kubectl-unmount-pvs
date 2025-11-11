@@ -1,11 +1,11 @@
 version: 2
-project_name: kubectl-unmount-pvs
+project_name: kubectl-unmount
 release:
   github:
     owner: dancavallaro
-    name: kubectl-unmount-pvs
+    name: kubectl-unmount
 builds:
-  - id: kubectl-unmount-pvs
+  - id: kubectl-unmount
     goos:
     - linux
     - darwin
@@ -16,5 +16,5 @@ builds:
       - CGO_ENABLED=0
     main: cmd/plugin/main.go
 archives:
-  - id: kubectl-unmount-pvs
+  - id: kubectl-unmount
     name_template: "{{ .ProjectName }}_v{{.Version}}_{{ .Os }}_{{ .Arch }}"

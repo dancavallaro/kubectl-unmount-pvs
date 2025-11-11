@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/common"
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/logger"
+	"github.com/dancavallaro/kubectl-unmount/pkg/common"
+	"github.com/dancavallaro/kubectl-unmount/pkg/logger"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

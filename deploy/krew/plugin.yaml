@@ -1,7 +1,7 @@
 apiVersion: krew.googlecontainertools.github.com/v1alpha2
 kind: Plugin
 metadata:
-  name: kubectl-unmount-pvs
+  name: kubectl-unmount
 spec:
   version: "v0.1.0"
   platforms:
@@ -9,47 +9,47 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
-    uri: https://github.com/dancavallaro/kubectl-unmount-pvs/releases/download/v0.1.0/kubectl-unmount-pvs_linux_amd64.tar.gz
+    uri: https://github.com/dancavallaro/kubectl-unmount/releases/download/v0.1.0/kubectl-unmount_linux_amd64.tar.gz
     sha256: ""
     files:
-    - from: "./kubectl-unmount-pvs"
+    - from: "./kubectl-unmount"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "kubectl-unmount-pvs"
+    bin: "kubectl-unmount"
   - selector:
       matchLabels:
         os: darwin
         arch: amd64
-    uri: https://github.com/dancavallaro/kubectl-unmount-pvs/releases/download/v0.1.0/kubectl-unmount-pvs_darwin_amd64.tar.gz
+    uri: https://github.com/dancavallaro/kubectl-unmount/releases/download/v0.1.0/kubectl-unmount_darwin_amd64.tar.gz
     sha256: ""
     files:
-    - from: "./kubectl-unmount-pvs"
+    - from: "./kubectl-unmount"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "kubectl-unmount-pvs"
+    bin: "kubectl-unmount"
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    uri: https://github.com/dancavallaro/kubectl-unmount-pvs/releases/download/v0.1.0/kubectl-unmount-pvs_windows_amd64.zip
+    uri: https://github.com/dancavallaro/kubectl-unmount/releases/download/v0.1.0/kubectl-unmount_windows_amd64.zip
     sha256: ""
     files:
-    - from: "/kubectl-unmount-pvs.exe"
+    - from: "/kubectl-unmount.exe"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "kubectl-unmount-pvs.exe"
+    bin: "kubectl-unmount.exe"
   shortDescription: A new plugin
-  homepage: https://github.com/dancavallaro/kubectl-unmount-pvs
+  homepage: https://github.com/dancavallaro/kubectl-unmount
   caveats: |
     Usage:
-      $ kubectl kubectl-unmount-pvs
+      $ kubectl unmount
 
     For additional options:
-      $ kubectl kubectl-unmount-pvs --help
-      or https://github.com/dancavallaro/kubectl-unmount-pvs/blob/v0.1.0/doc/USAGE.md
+      $ kubectl unmount --help
+      or https://github.com/dancavallaro/kubectl-unmount/blob/v0.1.0/README.md
 
   description: |
     This is a new plugin

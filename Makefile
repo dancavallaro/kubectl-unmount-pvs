@@ -7,7 +7,7 @@ test:
 
 .PHONY: bin
 bin: fmt vet
-	go build -o bin/kubectl-unmount_pvs github.com/dancavallaro/kubectl-unmount-pvs/cmd/plugin
+	go build -o bin/kubectl-unmount github.com/dancavallaro/kubectl-unmount/cmd/plugin
 
 .PHONY: fmt
 fmt:

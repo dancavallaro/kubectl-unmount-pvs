@@ -1,4 +1,4 @@
-module github.com/dancavallaro/kubectl-unmount-pvs
+module github.com/dancavallaro/kubectl-unmount
 
 go 1.25.3
 

@@ -1,7 +1,7 @@
 package discovery
 
 import (
-	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/logger"
+	"github.com/dancavallaro/kubectl-unmount/pkg/logger"
 	"k8s.io/client-go/kubernetes"
 )
 
