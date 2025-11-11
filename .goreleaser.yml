@@ -9,18 +9,12 @@ builds:
     goos:
     - linux
     - darwin
-    #- windows # isn't building on arm64
     goarch:
     - amd64
     - arm64
     env:
       - CGO_ENABLED=0
-      - GO111MODULE=on
     main: cmd/plugin/main.go
-    ldflags: -s -w
-      -X github.com/dancavallaro/kubectl-unmount-pvs/pkg/version.version=
 archives:
   - id: kubectl-unmount-pvs
-    ids:
-    - kubectl-unmount-pvs
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_v{{.Version}}_{{ .Os }}_{{ .Arch }}"
