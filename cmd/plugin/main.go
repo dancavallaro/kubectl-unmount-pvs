@@ -15,18 +15,24 @@ import (
 
 var (
 	config *plugin.ConfigFlags
+
+	// Injected by goreleaser via ldflags at build-time
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
 )
 
 func main() {
 	if err := RootCmd().Execute(); err != nil {
-		_, _ = fmt.Fprint(os.Stderr, err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "kubectl unmount-pvs",
+		Use: "kubectl unmount-pvs",
+
 		Short:         "Unmount all PersistentVolumes of a particular StorageClass",
 		SilenceErrors: true,
 		SilenceUsage:  true,
@@ -42,7 +48,20 @@ func RootCmd() *cobra.Command {
 			}
 			return nil
 		},
+		Version: fmt.Sprintf("kubectl-unmount-pvs v%s, commit %s, built at %s", version, commit, date),
 	}
+	cmd.SetVersionTemplate(`{{printf "%s\n" .Version}}`)
+
+	versionCmd := &cobra.Command{
+		Use:   "version",
+		Short: "Print the current version of kubectl-unmount-pvs",
+		Run: func(cmd *cobra.Command, args []string) {
+			root := cmd.Root()
+			root.SetArgs([]string{"--version"})
+			_ = root.Execute()
+		},
+	}
+	cmd.AddCommand(versionCmd)
 
 	cobra.OnInitialize(initConfig)
 	config = &plugin.ConfigFlags{
