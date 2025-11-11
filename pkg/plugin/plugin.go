@@ -23,6 +23,7 @@ type ConfigFlags struct {
 	Confirmed    *bool
 	DryRun       *bool
 	StorageClass *string
+	PVCName      *string
 
 	logger *logger.Logger
 	out    io.Writer
@@ -62,13 +63,21 @@ func run(ctx context.Context, cfg *ConfigFlags, clientset *kubernetes.Clientset)
 	}
 
 	cfg.logger.Info("Finding volumes...")
-	pvcsPerNs, err := finder.FindPVCs(ctx, filter)
-	if err != nil {
-		return err
-	}
-	if len(pvcsPerNs) == 0 {
-		cfg.logger.Info("No matching PVCs found, nothing to do")
-		return nil
+	var pvcsPerNs map[string][]string
+	if *cfg.PVCName == "" {
+		var err error
+		pvcsPerNs, err = finder.FindPVCs(ctx, filter)
+		if err != nil {
+			return err
+		}
+		if len(pvcsPerNs) == 0 {
+			cfg.logger.Info("No matching PVCs found, nothing to do")
+			return nil
+		}
+	} else {
+		pvcsPerNs = map[string][]string{
+			*cfg.Namespace: {*cfg.PVCName},
+		}
 	}
 
 	cfg.logger.Info("Finding pods...")

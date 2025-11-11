@@ -43,7 +43,10 @@ func RootCmd() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if *config.Namespace == "" && *config.StorageClass == "" {
-				return fmt.Errorf("you must specify at least one of --namespace or --storage-class")
+				return errors.New("you must specify at least one of --namespace or --storage-class")
+			}
+			if *config.StorageClass != "" && *config.PVCName != "" {
+				return errors.New("cannot specify both --storage-class and --pvc-name")
 			}
 			if err := plugin.RunPlugin(config); err != nil {
 				return errors.Unwrap(err)
@@ -70,9 +73,11 @@ func RootCmd() *cobra.Command {
 		ConfigFlags:  *genericclioptions.NewConfigFlags(false),
 		Confirmed:    common.BoolP(false),
 		DryRun:       common.BoolP(false),
+		PVCName:      common.StringP(""),
 		StorageClass: common.StringP(""),
 	}
 
+	cmd.Flags().StringVar(config.PVCName, "pvc", "", "Unmount a specific PVC")
 	cmd.Flags().StringVarP(config.StorageClass, "storage-class", "c", "", "Unmount PVs of a specific storage class")
 	cmd.Flags().BoolVarP(config.DryRun, "dry-run", "d", false,
 		"Print summary of controllers that would be scaled down, but *don't* modify anything")

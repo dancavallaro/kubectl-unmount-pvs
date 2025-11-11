@@ -186,6 +186,7 @@ func runPlugin(ctx context.Context, configurers ...func(*ConfigFlags)) (string, 
 	ns := ctx.Value("namespace").(string)
 	var logBuf, outBuf bytes.Buffer
 	pluginCfg := &ConfigFlags{
+		PVCName:      common.StringP(""),
 		StorageClass: &storageClassName,
 		DryRun:       common.BoolP(false),
 		Confirmed:    common.BoolP(true),
