@@ -16,6 +16,13 @@ var (
 	config *plugin.ConfigFlags
 )
 
+func main() {
+	if err := RootCmd().Execute(); err != nil {
+		_, _ = fmt.Fprint(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "kubectl unmount-pvs",
@@ -43,7 +50,7 @@ func RootCmd() *cobra.Command {
 		DryRun:       boolptr(false),
 		StorageClass: stringptr(""),
 	}
-	// TODO: add quiet option
+
 	cmd.Flags().StringVarP(config.StorageClass, "storage-class", "c", "", "Unmount PVs of a specific storage class")
 	cmd.Flags().BoolVarP(config.DryRun, "dry-run", "d", false,
 		"Print summary of controllers that would be scaled down, but *don't* modify anything")
@@ -60,13 +67,6 @@ func stringptr(val string) *string {
 
 func boolptr(val bool) *bool {
 	return &val
-}
-
-func main() {
-	if err := RootCmd().Execute(); err != nil {
-		_, _ = fmt.Fprint(os.Stderr, err)
-		os.Exit(1)
-	}
 }
 
 func initConfig() {

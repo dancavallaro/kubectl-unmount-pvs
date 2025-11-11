@@ -52,29 +52,30 @@ func run(ctx context.Context, log *logger.Logger, flags *ConfigFlags, clientset 
 		log.Info("No pods found, nothing to do")
 		return nil
 	}
-
 	log.Info("Found %d pods to scale down", len(pods))
-	for _, pod := range pods {
-		fmt.Printf("%s/%s\n", pod.Namespace, pod.Name)
-	}
-
-	skipConfirmation := flags.Confirmed != nil && *flags.Confirmed
-	confirmed, err := confirmAction(log, "Scale down the pods listed above?", skipConfirmation)
-	if err != nil {
-		return err
-	}
-	if !confirmed {
-		log.Info("Operation cancelled by user")
-		return nil
-	}
 
 	controllers, err := finder.FindControllers(ctx, pods)
 	if err != nil {
 		return err
 	}
-
 	if len(controllers) == 0 {
 		log.Info("No controllers found to scale down")
+		return nil
+	}
+	log.Info("Found %d controllers to scale down", len(controllers))
+
+	// Print the affected controllers on stdout (other logs are on stderr)
+	for _, controller := range controllers {
+		fmt.Printf("  %v\n", controller)
+	}
+
+	skipConfirmation := flags.Confirmed != nil && *flags.Confirmed
+	confirmed, err := confirmAction(log, "Scale down the controllers listed above?", skipConfirmation)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		log.Info("Operation cancelled by user")
 		return nil
 	}
 

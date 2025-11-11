@@ -28,7 +28,7 @@ func New(clientset *kubernetes.Clientset, log *logger.Logger, dryRun bool) Scale
 
 func (s Scaler) ScaleDown(ctx context.Context, ctrl common.ControllerRef) error {
 	if s.dryRun {
-		s.log.Info("  (dry-run, skipping controller: %s/%s/%s)", ctrl.Kind, ctrl.Namespace, ctrl.Name)
+		s.log.Info("  (dry-run, skipping controller: %v)", ctrl)
 		return nil
 	}
 
@@ -61,7 +61,8 @@ func scaleControllerToZero(ctx context.Context, log *logger.Logger, scaler scala
 		return fmt.Errorf("failed to get scale for %s %s/%s: %w", ctrl.Kind, ctrl.Namespace, ctrl.Name, err)
 	}
 
-	if scale.Spec.Replicas == 0 {
+	originalReplicas := scale.Spec.Replicas
+	if originalReplicas == 0 {
 		log.Info("%s %s/%s is already scaled to 0", ctrl.Kind, ctrl.Namespace, ctrl.Name)
 		return nil
 	}
@@ -72,7 +73,7 @@ func scaleControllerToZero(ctx context.Context, log *logger.Logger, scaler scala
 		return fmt.Errorf("failed to scale down %s %s/%s: %w", ctrl.Kind, ctrl.Namespace, ctrl.Name, err)
 	}
 
-	log.Info("  Scaled down %s %s/%s from %d to 0 replicas", ctrl.Kind, ctrl.Namespace, ctrl.Name, scale.Spec.Replicas)
+	log.Info("  Scaled down %s %s/%s from %d to 0 replicas", ctrl.Kind, ctrl.Namespace, ctrl.Name, originalReplicas)
 	return nil
 }
 
