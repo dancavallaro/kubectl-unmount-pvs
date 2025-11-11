@@ -22,10 +22,15 @@ kubectl unmount --namespace=my-namespace
 
 Combine filters:
 ```shell
-kubectl unmount --namespace=my-namespace
+kubectl unmount --namespace=my-namespace --storage-class=standard
 ```
 
 Skip confirmation prompt:
 ```shell
 kubectl unmount --storage-class=standard --yes
+```
+
+Dry run:
+```shell
+kubectl unmount --storage-class=standard --dry-run --yes
 ```

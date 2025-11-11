@@ -11,6 +11,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	// Import cloud auth providers
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 var (

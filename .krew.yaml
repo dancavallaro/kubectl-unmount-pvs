@@ -1,0 +1,36 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: unmount
+spec:
+  version: {{ .TagName }}
+  homepage: https://github.com/dancavallaro/kubectl-unmount
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha "https://github.com/dancavallaro/kubectl-unmount/releases/download/{{ .TagName }}/kubectl-unmount_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
+    bin: kubectl-unmount
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/dancavallaro/kubectl-unmount/releases/download/{{ .TagName }}/kubectl-unmount_{{ .TagName }}_darwin_arm64.tar.gz" .TagName }}
+    bin: kubectl-unmount
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha "https://github.com/dancavallaro/kubectl-unmount/releases/download/{{ .TagName }}/kubectl-unmount_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
+    bin: kubectl-unmount
+  - selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+    {{addURIAndSha "https://github.com/dancavallaro/kubectl-unmount/releases/download/{{ .TagName }}/kubectl-unmount_{{ .TagName }}_linux_arm64.tar.gz" .TagName }}
+    bin: kubectl-unmount
+  shortDescription: Unmount PVs by scaling down workloads that use them
+  description: |
+    This plugin unmounts PersistentVolumes by scaling down workloads that use them.
+    Read more documentation at: https://github.com/dancavallaro/kubectl-unmount
