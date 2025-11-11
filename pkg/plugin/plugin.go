@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/discovery"
 	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/logger"
 	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/scaling"
-	v1 "k8s.io/api/core/v1"
+	"github.com/dancavallaro/kubectl-unmount-pvs/pkg/spinner"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 )
@@ -43,11 +44,29 @@ func RunPlugin(flags *ConfigFlags) error {
 func run(ctx context.Context, log *logger.Logger, flags *ConfigFlags, clientset *kubernetes.Clientset) error {
 	finder := discovery.New(clientset, log)
 
-	pods, err := findPodsForStorageClass(ctx, log, finder, flags)
+	filter := discovery.PVCFilter{}
+	if flags.Namespace != nil {
+		filter.Namespace = *flags.Namespace
+	}
+	if flags.StorageClass != nil {
+		filter.StorageClass = *flags.StorageClass
+	}
+
+	log.Info("Finding volumes...")
+	pvcsPerNs, err := finder.FindPVCs(ctx, filter)
 	if err != nil {
 		return err
 	}
+	if len(pvcsPerNs) == 0 {
+		log.Info("No matching PVCs found, nothing to do")
+		return nil
+	}
 
+	log.Info("Finding pods...")
+	pods, err := finder.FindPodsUsingPVCs(ctx, pvcsPerNs)
+	if err != nil {
+		return err
+	}
 	if len(pods) == 0 {
 		log.Info("No pods found, nothing to do")
 		return nil
@@ -88,35 +107,21 @@ func run(ctx context.Context, log *logger.Logger, flags *ConfigFlags, clientset 
 		}
 	}
 
+	if !*flags.DryRun {
+		<-spinner.Wait("Waiting for pods to scale down... ", func() (bool, error) {
+			pods, err := finder.FindPodsUsingPVCs(ctx, pvcsPerNs)
+			if err != nil {
+				return false, err
+			}
+			return len(pods) == 0, nil
+		}, func(err error) {
+			log.Error(err)
+		}, 2*time.Second)
+	}
+
 	log.Info("Scale down complete")
 
-	// TODO: show spinner and wait until scaled down. Check for pods in the list until not found anymore (or time out).
-
 	return nil
-}
-
-func findPodsForStorageClass(ctx context.Context, log *logger.Logger, finder discovery.Finder, flags *ConfigFlags) ([]v1.Pod, error) {
-	filter := discovery.PVCFilter{}
-	if flags.Namespace != nil {
-		filter.Namespace = *flags.Namespace
-	}
-	if flags.StorageClass != nil {
-		filter.StorageClass = *flags.StorageClass
-	}
-
-	log.Info("Finding volumes...")
-	pvcsPerNs, err := finder.FindPVCs(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(pvcsPerNs) == 0 {
-		log.Info("No matching PVCs found, nothing to do")
-		return nil, nil
-	}
-
-	log.Info("Finding pods...")
-	return finder.FindPodsUsingPVCs(ctx, pvcsPerNs)
 }
 
 // confirmAction prompts the user to confirm an action by typing "yes".

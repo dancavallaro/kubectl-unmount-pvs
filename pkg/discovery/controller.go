@@ -2,7 +2,6 @@ package discovery
 
 import (
 	"context"
-	"fmt"
 	"maps"
 	"slices"
 
@@ -60,8 +59,8 @@ func (f *Finder) FindController(ctx context.Context, pod v1.Pod) (common.Control
 	}, nil
 }
 
+// FindControllers finds the (deduplicated) top-level controllers for the provided pods.
 func (f *Finder) FindControllers(ctx context.Context, pods []v1.Pod) ([]common.ControllerRef, error) {
-	// Find controllers for all pods and deduplicate
 	f.log.Info("Finding controllers for pods...")
 	controllers := make(map[string]common.ControllerRef) // key: "kind/namespace/name"
 	for _, pod := range pods {
@@ -70,8 +69,7 @@ func (f *Finder) FindControllers(ctx context.Context, pods []v1.Pod) ([]common.C
 			f.log.Warn("Failed to find controller for pod %s/%s: %v", pod.Namespace, pod.Name, err)
 			return nil, err
 		}
-		key := fmt.Sprintf("%s/%s/%s", ctrl.Kind, ctrl.Namespace, ctrl.Name)
-		controllers[key] = ctrl
+		controllers[ctrl.String()] = ctrl
 	}
 
 	return slices.Collect(maps.Values(controllers)), nil
